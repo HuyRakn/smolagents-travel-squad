@@ -1,0 +1,8 @@
+# Python >= 3.10 required (smolagents constraint)
+smolagents[toolkit]
+tavily-python
+python-dotenv
+Pillow
+fastapi
+uvicorn
+python-multipart

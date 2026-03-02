@@ -1,0 +1,38 @@
+# Environment
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Generated images
+generated_images/
+*.png
+*.jpg
+*.jpeg
+*.gif
+!assets/*.png
+!assets/*.jpg
+
+# Gradio temp
+gradio_cached_examples/
+flagged/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
