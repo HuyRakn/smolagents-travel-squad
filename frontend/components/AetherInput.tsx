@@ -59,7 +59,7 @@ export default function AetherInput({ onSendMessage, isGenerating }: AetherInput
                             autoFocus
                             value={value}
                             onChange={(e) => setValue(e.target.value)}
-                            placeholder="Ask about a destination, dish, or experience in Da Nang..."
+                            placeholder="Ask HuyRakn to write a travel story..."
                             disabled={isGenerating}
                             className="flex-1 bg-transparent border-none outline-none text-sm text-white placeholder-zinc-500 py-1"
                         />

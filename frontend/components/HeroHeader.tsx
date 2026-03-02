@@ -27,9 +27,9 @@ export default function HeroHeader() {
         >
             <motion.div
                 variants={item}
-                className="w-14 h-14 bg-zinc-900 border border-white/10 rounded-2xl flex items-center justify-center text-xs font-semibold text-zinc-500 tracking-widest mb-4"
+                className="w-14 h-14 bg-gradient-to-tr from-zinc-700 to-zinc-900 border border-white/10 shadow-lg rounded-2xl flex items-center justify-center text-sm font-bold text-white tracking-widest mb-4"
             >
-                FC
+                HR
             </motion.div>
             <motion.p variants={item} className="text-zinc-500 text-sm font-medium">
                 Good to See You.

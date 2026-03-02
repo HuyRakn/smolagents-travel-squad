@@ -1,19 +1,15 @@
 """
 FastAPI Backend for AetherAI Travel Squad.
-Replaces legacy Gradio app.py with a scalable streaming API for Next.js.
+Provides a scalable streaming API for the frontend.
 """
 
 import json
 import logging
-import uuid
-from pathlib import Path
 from typing import Generator
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from fastapi.staticfiles import StaticFiles
-from PIL import Image
 from smolagents import stream_to_gradio
 
 from agents.editor import build_editor_agent
@@ -32,30 +28,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Persistent storage for generated images
-IMAGE_DIR = Path("static/images")
-IMAGE_DIR.mkdir(parents=True, exist_ok=True)
-
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-print("Booting agent hierarchy...")
+logger.info("Booting agent hierarchy...")
 editor_agent = build_editor_agent()
-print("All agents online.")
-
-
-def _persist_image(img: Image.Image) -> str:
-    """Saves PIL Image to static/images and returns the public URL path."""
-    filename = f"{uuid.uuid4()}.png"
-    filepath = IMAGE_DIR / filename
-    img.save(filepath)
-    return f"/static/images/{filename}"
+logger.info("All agents online.")
 
 
 @app.post("/api/chat")
 async def chat_endpoint(request: Request):
     """
     Main endpoint for agent interaction.
-    Accepts a 'message' and streams thoughts + final blog post via SSE.
+    Accepts a 'message' and streams thoughts + final markdown blog post via SSE.
+
+    @param request: The incoming FastAPI HTTP request.
+    @return: A StreamingResponse yielding server-sent events.
     """
     data = await request.json()
     message = data.get("message", "")
@@ -80,11 +65,6 @@ async def chat_endpoint(request: Request):
                 elif isinstance(event, dict):
                     content = event.get("content") or event.get("answer") or event.get("text")
                 
-                if isinstance(content, Image.Image):
-                    image_url = _persist_image(content)
-                    yield f"data: {json.dumps({'type': 'image', 'url': image_url})}\n\n"
-                    continue
-
                 if content is None:
                     continue
 
@@ -132,6 +112,11 @@ async def chat_endpoint(request: Request):
 
 @app.get("/health")
 def health_check():
+    """
+    Health check endpoint for monitoring purposes.
+    
+    @return: A dictionary indicating server status.
+    """
     return {"status": "ok", "agents": "online"}
 
 
