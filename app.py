@@ -10,7 +10,6 @@ from typing import Generator
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from smolagents import stream_to_gradio
 
 from agents.editor import build_editor_agent
 
@@ -50,20 +49,21 @@ async def chat_endpoint(request: Request):
     def event_generator() -> Generator[str, None, None]:
         last_good_content = None
         try:
-            # stream_to_gradio yields AgentEvent objects
-            for event in stream_to_gradio(editor_agent, task=message, reset_agent_memory=False):
+            # Native stream from smolagents without requiring Gradio module
+            for event in editor_agent.run(message, stream=True):
                 event_type = type(event).__name__
                 content = None
                 
-                # Robust extraction across different event objects
                 if hasattr(event, "content"):
                     content = event.content
+                elif hasattr(event, "thought") and event.thought:
+                    content = event.thought
                 elif hasattr(event, "answer"):
                     content = event.answer
                 elif hasattr(event, "text"):
                     content = event.text
                 elif isinstance(event, dict):
-                    content = event.get("content") or event.get("answer") or event.get("text")
+                    content = event.get("content") or event.get("thought") or event.get("answer") or event.get("text")
                 
                 if content is None:
                     continue
