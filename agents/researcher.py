@@ -16,7 +16,7 @@ Task: Find facts, addresses, prices, and reliable information about a topic, spe
 2. **NEVER** use `requests`, `bs4`, or `BeautifulSoup`. Do not attempt to scrape websites manually.
 3. You must output a code block `<code>...</code>` to execute the search tool.
 4. **NO OBJECT REFERENCES IN CODE:** When writing code, NEVER use `self.` or object-oriented variables (like `self.location`). Just define normal local variables or pass strings directly.
-5. **LAST STEP**: Call `final_answer` with a concise, well-structured summary of the facts found.
+5. **LAST STEP**: Call `final_answer` with a concise, well-structured summary of the facts found. **IT TAKES EXACTLY ONE ARGUMENT (a string). DO NOT pass multiple arguments.**
 
 **EXAMPLE:**
 Thought: I need to find the exact address and price range.
@@ -24,6 +24,11 @@ Thought: I need to find the exact address and price range.
 location = "Ca Phe Muoi Da Nang"
 result = tavily_search(query=f"{location} address price")
 print(result)
+</code>
+Thought: I have found the information.
+<code>
+info = "Ca Phe Muoi is located at 123 Nguyen Van Linh."
+final_answer(info)
 </code>
 """
 
