@@ -31,37 +31,46 @@ export function useAgentStream() {
             setMessages((prev) => [...prev, assistantMsg]);
 
             let accumulatedReasoning = "";
+            let buffer = "";
 
             while (true) {
                 const { value, done } = await reader.read();
                 if (done) break;
 
-                const chunk = decoder.decode(value);
-                const lines = chunk.split("\n");
+                buffer += decoder.decode(value, { stream: true });
+                const events = buffer.split("\n\n");
 
-                for (const line of lines) {
-                    if (line.startsWith("data: ")) {
-                        try {
-                            const data = JSON.parse(line.slice(6));
+                // Keep the last incomplete event in the buffer
+                buffer = events.pop() || "";
 
-                            if (data.type === "thought") {
-                                // Strip any HTML tags (like <span...>) for cleaner markdown rendering
-                                const cleanThought = data.content.replace(/<[^>]*>/g, "");
-                                accumulatedReasoning += (accumulatedReasoning ? "\n" : "") + cleanThought;
-                                assistantMsg = { ...assistantMsg, reasoning: accumulatedReasoning, type: "thought" };
-                                setMessages((prev) => [...prev.slice(0, -1), assistantMsg]);
-                            } else if (data.type === "final") {
-                                assistantMsg = { ...assistantMsg, content: data.content, type: "final" };
-                                setMessages((prev) => [...prev.slice(0, -1), assistantMsg]);
-                            } else if (data.type === "image") {
-                                const imageMsg: Message = { role: "assistant", content: "", type: "image", url: data.url };
-                                setMessages((prev) => [...prev, imageMsg]);
-                            } else if (data.type === "error") {
-                                assistantMsg = { ...assistantMsg, content: `Error: ${data.content}`, type: "final" };
-                                setMessages((prev) => [...prev.slice(0, -1), assistantMsg]);
+                for (const event of events) {
+                    if (event.trim() === "") continue;
+
+                    const lines = event.split("\n");
+                    for (const line of lines) {
+                        if (line.startsWith("data: ")) {
+                            try {
+                                const data = JSON.parse(line.slice(6));
+
+                                if (data.type === "thought") {
+                                    // Strip any HTML tags (like <span...>) for cleaner markdown rendering
+                                    const cleanThought = data.content.replace(/<[^>]*>/g, "");
+                                    accumulatedReasoning += (accumulatedReasoning ? "\n" : "") + cleanThought;
+                                    assistantMsg = { ...assistantMsg, reasoning: accumulatedReasoning, type: "thought" };
+                                    setMessages((prev) => [...prev.slice(0, -1), assistantMsg]);
+                                } else if (data.type === "final") {
+                                    assistantMsg = { ...assistantMsg, content: data.content, type: "final" };
+                                    setMessages((prev) => [...prev.slice(0, -1), assistantMsg]);
+                                } else if (data.type === "image") {
+                                    const imageMsg: Message = { role: "assistant", content: "", type: "image", url: data.url };
+                                    setMessages((prev) => [...prev, imageMsg]);
+                                } else if (data.type === "error") {
+                                    assistantMsg = { ...assistantMsg, content: `Error: ${data.content}`, type: "final" };
+                                    setMessages((prev) => [...prev.slice(0, -1), assistantMsg]);
+                                }
+                            } catch (err) {
+                                console.error("Error parsing SSE data:", err, "Line content:", line);
                             }
-                        } catch (err) {
-                            console.error("Error parsing SSE data:", err);
                         }
                     }
                 }
